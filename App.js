@@ -10,20 +10,18 @@
 //ask user for location
 //button for prompting user's camera
 //once they take photo, send photo & lat & lng to backend 
-
 import React, { Component } from 'react';
 import {
-  View,
   AppRegistry,
   Text,
   View,
   StyleSheet,
   PixelRatio,
   TouchableHighlight,
-  Button,
 } from 'react-native';
 
 import {
+  // ViroVRSceneNavigator,
   ViroARSceneNavigator
 } from 'react-viro';
 
@@ -31,14 +29,18 @@ import {
  TODO: Insert your API key below
  */
 var sharedProps = {
-  apiKey:"API_KEY_HERE",
+  apiKey: "API_KEY_HERE",
 }
 
 // Sets the default scene you want for AR and VR
 var InitialARScene = require('./js/HelloWorldSceneAR');
+// var InitialVRScene = require('./js/HelloWorldScene');
 
 var UNSET = "UNSET";
-
+// var VR_NAVIGATOR_TYPE = "VR";
+var AR_NAVIGATOR_TYPE = "AR";
+var LOCATION_NAVIGATOR_TYPE = 'Location'
+var CAMERA_NAVIGATOR_TYPE = 'Camera'
 
 // This determines which type of experience to launch in, or UNSET, if the user should
 // be presented with a choice of AR or VR. By default, we offer the user a choice.
@@ -49,49 +51,333 @@ export default class ViroSample extends Component {
     super();
 
     this.state = {
-      navigatorType : defaultNavigatorType,
-      sharedProps : sharedProps,
-      buttonPressed: false
+      navigatorType: defaultNavigatorType,
+      sharedProps: sharedProps
     }
+    this._locationPrompt = this._locationPrompt.bind(this);
+    this._cameraPrompt = this._cameraPrompt.bind(this);
+    this._getExperienceSelector = this._getExperienceSelector.bind(this);
     this._getARNavigator = this._getARNavigator.bind(this);
+    this._getExperienceButtonOnPress = this._getExperienceButtonOnPress.bind(this);
     this._exitViro = this._exitViro.bind(this);
+  
   }
 
-
-  //show button for camera & prompt user for location
-  //then loads AR experience 
+//renders the screen flow
   render() {
+    if (this.state.navigatorType == UNSET) {
+      return this._locationPrompt();
+    } else if (this.state.navigatorType == LOCATION_NAVIGATOR_TYPE) {
+      return this._cameraPrompt();
+    } else if (this.state.navigatorType == CAMERA_NAVIGATOR_TYPE) {
+      return this._getExperienceSelector();
+    } else if (this.state.navigatorType == AR_NAVIGATOR_TYPE) {
+      return this._getARNavigator();
+    }
+  }
+
+  //1st screen to prompt user for location
+  _locationPrompt() {
     return (
-      !buttonPressed ? 
-      <View>
-            <Button
-          title="Press me"
-          onPress={() => Alert.alert('Simple Button pressed')}
-        />
-        </View> :
-      <ViroARSceneNavigator {...this.state.sharedProps}
-        initialScene={{scene: InitialARScene}} />
+      <View style={localStyles.outer} >
+        <View style={localStyles.inner} >
+
+          <Text style={localStyles.titleText}>
+            Can we use your location?
+        </Text>
+
+          <TouchableHighlight style={localStyles.buttons}
+            onPress={this._getExperienceButtonOnPress(LOCATION_NAVIGATOR_TYPE)}
+            underlayColor={'#68a0ff'} >
+
+            <Text style={localStyles.buttonText}>YES</Text>
+          </TouchableHighlight>
+        </View>
+      </View>
     );
   }
 
+    //2nd screen to prompt user for camera
+    _cameraPrompt() {
+      return (
+        <View style={localStyles.outer} >
+          <View style={localStyles.inner} >
+  
+            <Text style={localStyles.titleText}>
+              Click to take a photo
+          </Text>
+  
+            <TouchableHighlight style={localStyles.buttons}
+              onPress={this._getExperienceButtonOnPress(CAMERA_NAVIGATOR_TYPE)}
+              underlayColor={'#68a0ff'} >
+  
+              <Text style={localStyles.buttonText}>📷</Text>
+            </TouchableHighlight>
+          </View>
+        </View>
+      );
+    }
 
+  //3rd screen shows AR button 
+  _getExperienceSelector() {
+    return (
+      <View style={localStyles.outer} >
+        <View style={localStyles.inner} >
+
+          <Text style={localStyles.titleText}>
+            Click to experience AR
+          </Text>
+
+          <TouchableHighlight style={localStyles.buttons}
+            onPress={this._getExperienceButtonOnPress(AR_NAVIGATOR_TYPE)}
+            underlayColor={'#68a0ff'} >
+
+            <Text style={localStyles.buttonText}>AR</Text>
+          </TouchableHighlight>
+        </View>
+      </View>
+    );
+  }
 
   // Returns the ViroARSceneNavigator which will start the AR experience
   _getARNavigator() {
     return (
       <ViroARSceneNavigator {...this.state.sharedProps}
-        initialScene={{scene: InitialARScene}} />
+        initialScene={{ scene: InitialARScene }} />
     );
   }
-  
+
+
+  // This function returns an anonymous/lambda function to be used
+  // by the experience selector buttons
+  _getExperienceButtonOnPress(navigatorType) {
+    return () => {
+      this.setState({
+        navigatorType: navigatorType
+      })
+    }
+  }
 
   // This function "exits" Viro by setting the navigatorType to UNSET.
   _exitViro() {
     this.setState({
-      navigatorType : UNSET
+      navigatorType: UNSET
     })
   }
 }
 
- 
+var localStyles = StyleSheet.create({
+  viroContainer: {
+    flex: 1,
+    backgroundColor: "black",
+  },
+  outer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: "black",
+  },
+  inner: {
+    flex: 1,
+    flexDirection: 'column',
+    alignItems: 'center',
+    backgroundColor: "black",
+  },
+  titleText: {
+    paddingTop: 30,
+    paddingBottom: 20,
+    color: '#fff',
+    textAlign: 'center',
+    fontSize: 25
+  },
+  buttonText: {
+    color: '#fff',
+    textAlign: 'center',
+    fontSize: 20
+  },
+  buttons: {
+    height: 80,
+    width: 150,
+    paddingTop: 20,
+    paddingBottom: 20,
+    marginTop: 10,
+    marginBottom: 10,
+    backgroundColor: '#68a0cf',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#fff',
+  },
+  exitButton: {
+    height: 50,
+    width: 100,
+    paddingTop: 10,
+    paddingBottom: 10,
+    marginTop: 10,
+    marginBottom: 10,
+    backgroundColor: '#68a0cf',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#fff',
+  }
+});
+
+module.exports = ViroSample
+
+
+// import React, { Component } from 'react';
+// import {
+//   AppRegistry,
+//   Text,
+//   View,
+//   StyleSheet,
+//   PixelRatio,
+//   TouchableHighlight,
+//   // Button,
+// } from 'react-native';
+
+// import {
+//   ViroARSceneNavigator
+// } from 'react-viro';
+
+// /*
+//  TODO: Insert your API key below
+//  */
+// var sharedProps = {
+//   apiKey:"API_KEY_HERE",
+// }
+
+// // Sets the default scene you want for AR and VR
+// var InitialARScene = require('./js/HelloWorldSceneAR');
+
+// var UNSET = "UNSET";
+
+
+// // This determines which type of experience to launch in, or UNSET, if the user should
+// // be presented with a choice of AR or VR. By default, we offer the user a choice.
+// var defaultNavigatorType = UNSET;
+
+// export default class ViroSample extends Component {
+//   constructor() {
+//     super();
+
+//     this.state = {
+//       navigatorType : defaultNavigatorType,
+//       sharedProps : sharedProps,
+//       // buttonPressed: false
+//     }
+//     this._getFirstScreen = this._getFirstScreen.bind(this);
+//     this._getARNavigator = this._getARNavigator.bind(this);
+//     this._exitViro = this._exitViro.bind(this);
+//   }
+
+
+//   //show button for camera & prompt user for location
+//   //then loads AR experience 
+//   //use AR get function once button is pressed
+//   render() {
+//     if (this.state.navigatorType == UNSET) {
+//       return this._getFirstScreen();
+//       // return this._getExperienceSelector();
+//     } else if (this.state.navigatorType == AR_NAVIGATOR_TYPE) {
+//       return this._getARNavigator();
+//     }
+//     }
+
+//   // Returns first screen with camera button & location prompt 
+//   _getFirstScreen(){
+//     return(
+//       <View>
+//        <TouchableHighlight style={localStyles.buttons}
+//             onPress={this._getExperienceButtonOnPress(AR_NAVIGATOR_TYPE)}
+//             underlayColor={'#68a0ff'} >
+
+//             <Text style={localStyles.buttonText}>AR</Text>
+//           </TouchableHighlight>
+//       </View>
+//     )
+//   }
+
+//   // Returns the ViroARSceneNavigator which will start the AR experience
+//   _getARNavigator() {
+//     return (
+//       <ViroARSceneNavigator {...this.state.sharedProps}
+//         initialScene={{scene: InitialARScene}} />
+//     );
+//   }
+
+//   // This function returns an anonymous/lambda function to be used
+//   // by the experience selector buttons
+//   _getExperienceButtonOnPress(navigatorType) {
+//     return () => {
+//       this.setState({
+//         navigatorType : navigatorType
+//       })
+//     }
+//   }
+
+
+//   // This function "exits" Viro by setting the navigatorType to UNSET.
+//   _exitViro() {
+//     this.setState({
+//       navigatorType : UNSET
+//     })
+//   }
+
+//   var localStyles = StyleSheet.create({
+//     viroContainer :{
+//       flex : 1,
+//       backgroundColor: "black",
+//     },
+//     outer : {
+//       flex : 1,
+//       flexDirection: 'row',
+//       alignItems:'center',
+//       backgroundColor: "black",
+//     },
+//     inner: {
+//       flex : 1,
+//       flexDirection: 'column',
+//       alignItems:'center',
+//       backgroundColor: "black",
+//     },
+//     titleText: {
+//       paddingTop: 30,
+//       paddingBottom: 20,
+//       color:'#fff',
+//       textAlign:'center',
+//       fontSize : 25
+//     },
+//     buttonText: {
+//       color:'#fff',
+//       textAlign:'center',
+//       fontSize : 20
+//     },
+//     buttons : {
+//       height: 80,
+//       width: 150,
+//       paddingTop:20,
+//       paddingBottom:20,
+//       marginTop: 10,
+//       marginBottom: 10,
+//       backgroundColor:'#68a0cf',
+//       borderRadius: 10,
+//       borderWidth: 1,
+//       borderColor: '#fff',
+//     },
+//     exitButton : {
+//       height: 50,
+//       width: 100,
+//       paddingTop:10,
+//       paddingBottom:10,
+//       marginTop: 10,
+//       marginBottom: 10,
+//       backgroundColor:'#68a0cf',
+//       borderRadius: 10,
+//       borderWidth: 1,
+//       borderColor: '#fff',
+//     }
+//   });
+
+
+
 module.exports = ViroSample
